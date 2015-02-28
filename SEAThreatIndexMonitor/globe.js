@@ -185,6 +185,8 @@
             }
             populationWidth.addSample(Cesium.JulianDate.fromIso8601("2010"), this._populationScale(population));
             sampledPopulation.addSample(Cesium.JulianDate.fromIso8601("2010"), population);
+          
+      
 
             var polyline = new Cesium.PolylineGraphics();
             polyline.show = new Cesium.ConstantProperty(true);
@@ -288,9 +290,9 @@
         this._name = "Threat index";
         this._entityCollection = new Cesium.EntityCollection();
         this._clock = new Cesium.DataSourceClock();
-        this._clock.startTime = Cesium.JulianDate.fromIso8601("1800-01-02");
-        this._clock.stopTime = Cesium.JulianDate.fromIso8601("2009-01-02");
-        this._clock.currentTime = Cesium.JulianDate.fromIso8601("1800-01-02");
+        this._clock.startTime = Cesium.JulianDate.fromIso8601("1990-01-02");
+        this._clock.stopTime = Cesium.JulianDate.fromIso8601("2013-01-02");
+        this._clock.currentTime = Cesium.JulianDate.fromIso8601("1990-01-02");
         this._clock.clockRange = Cesium.ClockRange.LOOP_STOP;
         this._clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         this._clock.multiplier = yearPerSec * 5;
@@ -298,9 +300,11 @@
         this._error = new Cesium.Event();
         this._isLoading = false;
         this._loading = new Cesium.Event();
-        this._year = 1800;
+        this._year = 1990;
         this._wealthScale = d3.scale.log().domain([300, 1e5]).range([0, 10000000.0]);
         this._healthScale = d3.scale.linear().domain([10, 85]).range([0, 10000000.0]);
+//        this._militaryScale = d3.scale.linear().domain([0, 100]).range([0.0, 1000000000.0]);
+        this._militaryScale = d3.scale.linear().domain([0, 1000]).range([0.0, 1000000000.0]);
         this._populationScale = d3.scale.sqrt().domain([0, 5e8]).range([5.0, 30.0]);
         this._colorScale = d3.scale.category20c();
         this._selectedEntity = undefined;
@@ -448,6 +452,22 @@
             health.addSample(Cesium.JulianDate.fromIso8601("2010"), surfacePosition);
             sampledHealth.addSample(Cesium.JulianDate.fromIso8601("2010"), 0.0);
 
+           // Construct MilitaryExpenditure related Properties
+            var military = new Cesium.SampledPositionProperty();
+            var sampledMilitary = new Cesium.SampledProperty(Number);
+            heightPosition = Cesium.Cartesian3.fromDegrees(nation.lon, nation.lat, this._militaryScale(nation.militaryexpenditure[0][1]), ellipsoid, cartesian3Scratch);
+            military.addSample(Cesium.JulianDate.fromIso8601("1990"), heightPosition);
+            sampledMilitary.addSample(Cesium.JulianDate.fromIso8601("1990"), nation.militaryexpenditure[0][1]);
+            for (var j = 0; j < nation.militaryexpenditure.length; j++) {
+                var year = nation.militaryexpenditure[j][0];
+                var militaryExpd = nation.militaryexpenditure[j][1];
+                heightPosition = Cesium.Cartesian3.fromDegrees(nation.lon, nation.lat, this._militaryScale(militaryExpd), ellipsoid, cartesian3Scratch);
+                military.addSample(Cesium.JulianDate.fromIso8601(year.toString()), heightPosition);
+                sampledMilitary.addSample(Cesium.JulianDate.fromIso8601(year.toString()), militaryExpd);
+            }
+            military.addSample(Cesium.JulianDate.fromIso8601("2015"), surfacePosition);
+            sampledMilitary.addSample(Cesium.JulianDate.fromIso8601("2015"), 0.0);
+
             // Construct Population related Properties
             var populationWidth = new Cesium.SampledProperty(Number);
             var sampledPopulation = new Cesium.SampledProperty(Number);
@@ -475,7 +495,7 @@
 
             var entity = new Cesium.Entity(nation.name);
             entity.polyline = polyline;
-            polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(surfacePosition), health]);
+            polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(surfacePosition), military]);
 
             // Add data properties to entity
             entity.addProperty('region');
@@ -494,6 +514,8 @@
             entity.income = sampledWealth;
             entity.addProperty('population');
             entity.population = sampledPopulation;
+            entity.addProperty('military');
+            entity.military = sampledMilitary;
             //entity.description = new Cesium.ConstantProperty("foo");
 
             // if we wanted to use points instead ...
@@ -520,11 +542,12 @@
 
     ThreatIndexDataSource.prototype._setInfoDialog = function(time) {
         if (Cesium.defined(this._selectedEntity)) {
+            var militaryExpenditure = this._selectedEntity.military.getValue(time);
             var lifeExpectancy = this._selectedEntity.lifeExpectancy.getValue(time);
             var income = this._selectedEntity.income.getValue(time);
             var population = this._selectedEntity.population.getValue(time);
             $("#info table").remove();
-            $("#info").append("<table> \
+            $("#info").append("<table><tr><td>Military Expenditure:</td><td>" +(parseFloat(militaryExpenditure)*1000)+" milions US$</td></tr>\
             <tr><td>Life Expectancy:</td><td>" +parseFloat(lifeExpectancy).toFixed(1)+"</td></tr>\
             <tr><td>Income:</td><td>" +parseFloat(income).toFixed(1)+"</td></tr>\
             <tr><td>Population:</td><td>" +parseFloat(population).toFixed(1)+"</td></tr>\
@@ -564,20 +587,33 @@
     $("#radio").css("font-size", "12px");
     $("body").css("background-color", "black");
 
-    $("input[name='healthwealth']").change(function(d){
-        var entities = healthAndWealth.entities.entities;
-        healthAndWealth.entities.suspendEvents();
+//    $("input[name='healthwealth']").change(function(d){
+//        var entities = healthAndWealth.entities.entities;
+//        healthAndWealth.entities.suspendEvents();
+//        for (var i = 0; i < entities.length; i++) {
+//            var entity = entities[i];
+//            if (d.target.id === 'health') {
+//                entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.health]);
+//            } else {
+//                entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.wealth]);
+//            }
+//        }
+//        healthAndWealth.entities.resumeEvents();
+//    });
+
+    $("input[name='thindex']").change(function(d){
+        var entities = theartIndex.entities.entities;
+        theartIndex.entities.suspendEvents();
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            if (d.target.id === 'health') {
-                entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.health]);
+            if (d.target.id === 'thindex') {
+                entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.military]);
             } else {
                 entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.wealth]);
             }
         }
-        healthAndWealth.entities.resumeEvents();
+        theartIndex.entities.resumeEvents();
     });
-
     var viewer = new Cesium.Viewer('cesiumContainer', 
             {
                 fullscreenElement : document.body,
@@ -591,7 +627,7 @@
     viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
     viewer.clock.startTime = Cesium.JulianDate.fromIso8601("1800-01-02");
     viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("1800-01-02");
-    viewer.clock.stopTime = Cesium.JulianDate.fromIso8601("2009-01-02");
+    viewer.clock.stopTime = Cesium.JulianDate.fromIso8601("2014-01-02");
     viewer.clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER;
     viewer.clock.multiplier = yearPerSec * 5;
     viewer.animation.viewModel.setShuttleRingTicks([yearPerSec, yearPerSec*5, yearPerSec*10, yearPerSec*50]);
@@ -613,8 +649,8 @@
 //    healthAndWealth.loadUrl('nations_geo.json');
 
     var theartIndex = new ThreatIndexDataSource();
-    healthAndWealth.loadUrl('nations_geo.json');
-    viewer.dataSources.add(healthAndWealth);
+    theartIndex.loadUrl('nations_geo.json');
+    viewer.dataSources.add(theartIndex);
 
     // If the mouse is over the billboard, change its scale and color
     var highlightBarHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -624,7 +660,8 @@
             if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
                 if (Cesium.defined(pickedObject.id.nationData)) {
                     sharedObject.dispatch.nationMouseover(pickedObject.id.nationData, pickedObject);
-                    healthAndWealth.selectedEntity = pickedObject.id;
+//                    healthAndWealth.selectedEntity = pickedObject.id;
+                    theartIndex.selectedEntity = pickedObject.id;
                 }
             }
         },
@@ -645,9 +682,10 @@
 
     // Response to a nation's mouseover event
     sharedObject.dispatch.on("nationMouseover.cesium", function(nationObject) {
-
+//        console.log(nationObject);
         $("#info table").remove();
         $("#info").append("<table> \
+        <tr><td>Military Expenditure:</td><td>" +(parseFloat(nationObject.militaryExpenditure)*1000)+" milions US$</td></tr>\
         <tr><td>Life Expectancy:</td><td>" +parseFloat(nationObject.lifeExpectancy).toFixed(1)+"</td></tr>\
         <tr><td>Income:</td><td>" +parseFloat(nationObject.income).toFixed(1)+"</td></tr>\
         <tr><td>Population:</td><td>" +parseFloat(nationObject.population).toFixed(1)+"</td></tr>\

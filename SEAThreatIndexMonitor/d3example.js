@@ -4,7 +4,12 @@
 
     // Various accessors that specify the four dimensions of data to visualize.
     function x(d) { return d.income; }
-    function y(d) { return d.lifeExpectancy; }
+//    function y(d) { return d.lifeExpectancy; }
+    function y(d) {
+//        console.log(d.militaryExpenditure);
+//        return 0;        
+        return d.militaryExpenditure; 
+    }
     function radius(d) { return d.population; }
     function color(d) { return d.region; }
     function key(d) { return d.name; }
@@ -16,7 +21,7 @@
 
     // Various scales. These domains make assumptions of data, naturally.
     var xScale = d3.scale.log().domain([300, 1e5]).range([0, width]),
-        yScale = d3.scale.linear().domain([10, 85]).range([height, 0]),
+        yScale = d3.scale.linear().domain([0, 200]).range([height,0]),
         radiusScale = d3.scale.sqrt().domain([0, 5e8]).range([0, 40]),
         colorScale = d3.scale.category20c();
 
@@ -57,7 +62,7 @@
         .attr("y", 6)
         .attr("dy", ".75em")
         .attr("transform", "rotate(-90)")
-        .text("life expectancy (years)");
+        .text("military expenditure (billions $)");
 
     // Add the year label; the value is set on transition.
     var label = svg.append("text")
@@ -93,6 +98,7 @@
             income: interpolateValues(d.income, year),
             population: interpolateValues(d.population, year),
             lifeExpectancy: interpolateValues(d.lifeExpectancy, year),
+            militaryExpenditure: interpolateValues(d.militaryexpenditure, year),
             lat: d.lat,
             lon: d.lon
           };
