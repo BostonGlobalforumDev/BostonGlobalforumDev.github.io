@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>South east asia threat index</title>
+	<script type="text/javascript" src="3rdParty/jquery-ui-1.10.3/jquery-1.9.1.js"></script>
+	<script type="text/javascript" src="3rdParty/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
+    <script type="text/javascript" src="3rdParty/cesium/Build/Cesium/Cesium.js"></script>
+
+
+    <script type="text/javascript" src="3rdParty/d3/d3.v3.js"></script>
+	<script type="text/javascript">
+		var sharedObject = {
+			dispatch : d3.dispatch("nationMouseover"),
+			yearData : [],
+			flyTo : null
+		};
+                var flyOnStart = false;
+    </script>
+    <style>
+      @import url(3rdParty/jquery-ui-1.10.3/themes/vader/jquery-ui.css);
+      @import url(d3chart.css);
+      @import url(3rdParty/cesium/Build/Cesium/Widgets/widgets.css);
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+<body>
+        <div id="cesiumContainer"></div>
+	<div id="radio" style="position:absolute; top:0px; right:50%; height: 30px">
+            <!--
+		<input type="radio" id="health" name="healthwealth" checked="checked"><label for="health">Health</label>
+		<input type="radio" id="wealth" name="healthwealth"><label for="wealth">Wealth</label> -->
+                <input type="radio" id="thindex" name="military" ><label for="thindex">Military Expenditure</label>
+                <input type="radio" id="useforceindex" name="military" checked="checked"><label for="useforceindex">Use of force</label>
+	</div>
+	<div id="chart"></div>
+        <canvas id="lcanvas" width="566" height="637"></canvas>
+	<div id="info" title="Use of force"></div>
+        <div id="eventinfo" title="Detail"></div>
+
+	<script type="text/javascript" src="globe.js"></script>
+        <script>
+            // sharedObject.flyToDedaultPos();
+//            var canvas = document.getElementById("lcanvas");
+//            var context = canvas.getContext("2d");
+//            var canvas = document.getElementById("lcanvas");
+
+        </script>
+</body>
+</html>

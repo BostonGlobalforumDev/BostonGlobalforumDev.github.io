@@ -601,15 +601,16 @@
 //        healthAndWealth.entities.resumeEvents();
 //    });
 
-    $("input[name='thindex']").change(function(d){
+    $("input[name='military']").change(function(d){
         var entities = theartIndex.entities.entities;
         theartIndex.entities.suspendEvents();
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
             if (d.target.id === 'thindex') {
-                entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.military]);
+                // entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.military]);
             } else {
-                entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.wealth]);
+                // entity.polyline.positions = new Cesium.PositionPropertyArray([new Cesium.ConstantPositionProperty(entity.surfacePosition), entity.wealth]);
+                window.location = "./uof/";
             }
         }
         theartIndex.entities.resumeEvents();

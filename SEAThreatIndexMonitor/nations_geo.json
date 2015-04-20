@@ -2,6 +2,7 @@
     "name": "Vietnam",
     "region": "East Asia & Pacific",
     "lon": 108.4265113,
+    "lat": 13.2904027,
     "lifeExpectancy": [
       [
         1800,
@@ -550,7 +551,6 @@
         2679.34
       ]
     ],
-    "lat": 13.2904027,
     "population": [
       [
         1800,
